@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Piece of Py – Learn Python in 5 Missions</title>
+<style>
+  :root {
+    --bg: #f4f1ff;
+    --card: #ffffff;
+    --ink: #22223b;
+    --muted: #5c5f7a;
+    --brand: #6c4ce0;
+    --brand-dark: #5236c4;
+    --green: #22a861;
+    --red: #d64545;
+    --amber: #e09a00;
+    --border: #ddd8f5;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+  }
+
+  /* Header */
+  header {
+    background: var(--brand);
+    color: #fff;
+    padding: 12px 16px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  header h1 { margin: 0; font-size: 1.7rem; letter-spacing: 0.5px; }
+  .dots { display: flex; gap: 8px; }
+  .dot {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.35);
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0;
+  }
+  .dot:hover { background: rgba(255,255,255,0.3); }
+  .dot.done { background: var(--green); border-color: var(--green); }
+  .dot.current { background: transparent; border-color: #fff; border-width: 4px; }
+  .dot.done.current { background: var(--green); border-color: #fff; }
+  .dot:focus-visible { outline: 3px solid #ffd166; outline-offset: 2px; }
+
+  /* Layout */
+  main {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .card {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 16px 18px;
+    box-shadow: 0 2px 8px rgba(60, 40, 140, 0.08);
+  }
+  .card h2 { margin: 0 0 6px; font-size: 1.35rem; }
+  .card h3 { margin: 0 0 6px; font-size: 1.1rem; }
+  .card p { margin: 6px 0; }
+  .mission-num { color: var(--brand); font-weight: 700; font-size: 0.9rem; text-transform: uppercase; }
+  .goal {
+    background: #f0ebff;
+    border-left: 5px solid var(--brand);
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-top: 10px;
+  }
+
+  /* Code box */
+  label.code-label { font-weight: 700; display: block; margin-bottom: 6px; }
+  textarea#code {
+    width: 100%;
+    min-height: 210px;
+    font-family: ui-monospace, Menlo, Consolas, "Courier New", monospace;
+    font-size: 16px; /* 16px stops phones from zooming in */
+    line-height: 1.5;
+    padding: 12px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    resize: vertical;
+    tab-size: 4;
+    background: #fcfbff;
+    color: var(--ink);
+  }
+  textarea#code:focus { outline: none; border-color: var(--brand); }
+
+  /* Buttons */
+  .buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+  button.btn {
+    font-size: 1rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 999px;
+    padding: 11px 20px;
+    cursor: pointer;
+  }
+  .btn-run { background: var(--green); color: #fff; }
+  .btn-run:disabled { background: #9aa0a6; cursor: not-allowed; }
+  .btn-stuck { background: #ffe9b3; color: #6b4a00; }
+  .btn-next { background: var(--brand); color: #fff; }
+  .btn-next:hover { background: var(--brand-dark); }
+  .hidden { display: none !important; }
+
+  /* Output */
+  .output-wrap h3 { margin: 0 0 6px; font-size: 1rem; color: var(--muted); }
+  pre#output {
+    margin: 0;
+    background: #1e1e2e;
+    color: #e6e6f0;
+    font-family: ui-monospace, Menlo, Consolas, "Courier New", monospace;
+    font-size: 15px;
+    padding: 14px;
+    border-radius: 10px;
+    min-height: 80px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  pre#output.muted { color: #9a9ab0; font-style: italic; }
+
+  /* Feedback */
+  #feedback { border-left: 6px solid var(--border); }
+  #feedback.good { border-left-color: var(--green); background: #eefaf3; }
+  #feedback.bad { border-left-color: var(--red); background: #fdf0f0; }
+  #feedback.almost { border-left-color: var(--amber); background: #fff8e8; }
+  #feedback pre {
+    background: #fff;
+    border: 1px dashed #c9c2e8;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-family: ui-monospace, Menlo, Consolas, "Courier New", monospace;
+    white-space: pre-wrap;
+    margin: 6px 0 0;
+  }
+
+  /* Hints */
+  #hints { border-left: 6px solid #ffd166; }
+  .hint { margin: 8px 0; }
+  .hint strong { color: #8a5a00; }
+  .hint .hint-text { white-space: pre-wrap; }
+
+  /* Load error */
+  #loadError { border-left: 6px solid var(--red); background: #fdf0f0; }
+
+  @media (max-width: 480px) {
+    header { justify-content: center; }
+    header h1 { width: 100%; text-align: center; }
+    .dot { width: 38px; height: 38px; }
+    main { padding: 10px; }
+    .card { padding: 14px; }
+    button.btn { flex: 1 1 auto; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🥧 Piece of Py</h1>
+  <nav class="dots" id="dots" aria-label="Missions"></nav>
+</header>
+
+<main>
+  <section class="card" id="missionCard">
+    <div class="mission-num" id="missionNum"></div>
+    <h2 id="missionTitle"></h2>
+    <p id="missionStory"></p>
+    <div class="goal"><strong>Goal: </strong><span id="missionGoal"></span></div>
+  </section>
+
+  <section class="card hidden" id="loadError">
+    <h3>Python didn't load 😕</h3>
+    <p>Piece of Py needs to download Python from the internet the first time it runs.</p>
+    <p>Your internet may be down, or your network (for example a school network) may block <strong>cdn.jsdelivr.net</strong>.</p>
+    <p>Check your connection, then reload the page.</p>
+  </section>
+
+  <section class="card">
+    <label class="code-label" for="code">Your code</label>
+    <textarea id="code" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+    <div class="buttons">
+      <button class="btn btn-run" id="runBtn" disabled>Loading Python...</button>
+      <button class="btn btn-stuck" id="stuckBtn">Stuck?</button>
+      <button class="btn btn-next hidden" id="nextBtn">Next mission →</button>
+    </div>
+  </section>
+
+  <section class="output-wrap">
+    <h3>Output</h3>
+    <pre id="output" class="muted">Python is loading... the first time can take a little while.</pre>
+  </section>
+
+  <section class="card" id="feedback">
+    <h3 id="feedbackTitle">Ready when you are</h3>
+    <p id="feedbackText">Write your code, then press Run.</p>
+    <pre id="feedbackExpected" class="hidden"></pre>
+  </section>
+
+  <section class="card hidden" id="hints">
+    <h3>Hints</h3>
+    <div id="hintList"></div>
+  </section>
+</main>
+
+<!-- Pyodide (Python in the browser), loaded with a normal script tag -->
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+
+<script>
+/* =====================================================================
+   1. MISSIONS
+   Each mission: id, title, story, goal, starter, expected, mustUse, hints.
+   Hints: 1 = where to look, 2 = the idea in words,
+          3 = an example that solves a DIFFERENT problem.
+   ===================================================================== */
+const MISSIONS = [
+  {
+    id: "m1",
+    title: "Say hello",
+    story: "Piece of Py just came out of the oven and wants to meet you! Computers talk with print, which shows words on the screen.",
+    goal: "Print exactly: Hello, Piece of Py!",
+    starter: '# Change this line to say hello to Piece of Py\nprint("Hi")\n',
+    expected: "Hello, Piece of Py!",
+    mustUse: ["print"],
+    hints: [
+      "Look inside the quotes after print. That's the only part you need to change.",
+      "print shows the text between the quotes exactly as you type it. Capital letters, the comma and the ! all have to match the goal.",
+      'Example (a different message):\nprint("Good morning, Robot!")\nshows: Good morning, Robot!'
+    ]
+  },
+  {
+    id: "m2",
+    title: "Name your pet",
+    story: "You adopted a pet! A variable (a named box that holds a value) called pet is holding its name. Tell everyone about your new friend.",
+    goal: "Print exactly: My pet is Biscuit — and use the pet variable to do it.",
+    starter: 'pet = "Biscuit"\n\n# Print the sentence using the pet variable\n',
+    expected: "My pet is Biscuit",
+    mustUse: ["pet", "print"],
+    hints: [
+      "Look at the first line: pet is a box with a name inside it. You want print to show what's in the box.",
+      "Inside print you can put some text in quotes, then a comma, then a variable name with NO quotes. print puts a space between them for you.",
+      'Example (a different problem):\nfood = "pizza"\nprint("I love", food)\nshows: I love pizza'
+    ]
+  },
+  {
+    id: "m3",
+    title: "Share the cookies",
+    story: "You baked 12 cookies and 4 friends came over. Everyone should get the same number of cookies. How many does each friend get?",
+    goal: "Print exactly: 3 — work it out from cookies and friends.",
+    starter: "cookies = 12\nfriends = 4\n\n# How many cookies does each friend get?\n",
+    expected: "3",
+    mustUse: ["cookies", "friends"],
+    hints: [
+      "You need to split the cookies between the friends. Which math sign splits things into equal parts?",
+      "Divide the cookies variable by the friends variable inside print. In Python, / gives an answer like 3.0 (with a .0), but // gives a whole number.",
+      "Example (a different problem):\napples = 10\nbaskets = 2\nprint(apples // baskets)\nshows: 5"
+    ]
+  },
+  {
+    id: "m4",
+    title: "Rocket countdown",
+    story: "Your rocket is on the launch pad! Mission control needs a countdown. A for loop (code that repeats for each item in a list) can count for you.",
+    goal: "Print 5, 4, 3, 2, 1 (one per line), then Liftoff! — using a for loop.",
+    starter: "# Count down from 5 to 1 with a for loop\n# Then print Liftoff!\n",
+    expected: "5\n4\n3\n2\n1\nLiftoff!",
+    mustUse: ["for"],
+    hints: [
+      "Look up range(). It makes the numbers that a for loop walks through, one at a time.",
+      "range(start, stop, step): a step of -1 counts down, and the stop number is NOT included. The print inside the loop is indented 4 spaces. The Liftoff! line goes after the loop, not indented.",
+      "Example (a different problem — counting by twos):\nfor n in range(2, 11, 2):\n    print(n)\nshows 2, 4, 6, 8, 10"
+    ]
+  },
+  {
+    id: "m5",
+    title: "Did you win?",
+    story: "You just finished a video game level with a score of 85. The game has to decide: did you win? You need more than 50 points to win.",
+    goal: "Use if and else: print You win! if score is over 50, otherwise print Try again",
+    starter: "score = 85\n\n# Use if and else here\n",
+    expected: "You win!",
+    mustUse: ["if", "else"],
+    hints: [
+      "Look at score. Your code needs to ask a question: is score more than 50?",
+      "if asks a question like score > 50 and ends with a colon (:). The line under it is indented. else: (also with a colon) handles every other case, and its line is indented too.",
+      'Example (a different problem):\ntemp = 30\nif temp > 25:\n    print("Hot day")\nelse:\n    print("Cool day")'
+    ]
+  }
+];
+
+/* =====================================================================
+   2. FRIENDLY error messages
+   Turn Python's error into a short message for kids.
+   ===================================================================== */
+function atLine(line) {
+  return line ? " on line " + line : "";
+}
+
+const FRIENDLY = {
+  SyntaxError: function (info) {
+    return {
+      title: "Oops! Python can't read that",
+      text: "Something is typed in a way Python doesn't understand" + atLine(info.line) +
+            ". Check for a missing quote \" , a missing bracket ( ), or a missing colon :"
+    };
+  },
+  IndentationError: function (info) {
+    return {
+      title: "Oops! The spaces are off",
+      text: "The spaces at the start of a line are wrong" + atLine(info.line) +
+            ". Lines inside a loop or an if need 4 spaces in front. Other lines need none."
+    };
+  },
+  NameError: function (info) {
+    var word = info.name ? '"' + info.name + '"' : "a word";
+    return {
+      title: "Oops! Unknown word",
+      text: "Python doesn't know the word " + word + atLine(info.line) +
+            ". Check the spelling. If it's meant to be text, put it in quotes."
+    };
+  },
+  TypeError: function (info) {
+    return {
+      title: "Oops! Mixed-up types",
+      text: "You mixed things that don't go together, like text and a number" + atLine(info.line) +
+            ". To join a number with text, turn the number into text with str(), like str(5)."
+    };
+  },
+  ZeroDivisionError: function (info) {
+    return {
+      title: "Oops! Dividing by zero",
+      text: "You tried to divide by zero" + atLine(info.line) +
+            ". Nobody can split things into 0 groups! Check the number you divide by."
+    };
+  },
+  Timeout: function (info) {
+    return {
+      title: "Whoa, that took too long!",
+      text: "Your code ran for more than 3 seconds, so Piece of Py stopped it" + atLine(info.line) +
+            ". Maybe a loop never ends?"
+    };
+  },
+  Other: function (info) {
+    return {
+      title: "Oops! Something went wrong",
+      text: "Python found a problem (" + info.type + ")" + atLine(info.line) +
+            ". Read that line carefully, or press Stuck? for a hint."
+    };
+  }
+};
+
+// Read Python's traceback: error type, line number, unknown name.
+function parseError(message) {
+  var msg = String(message || "");
+  var info = { type: "Error", line: null, name: null };
+
+  // Line number: the LAST 'File "<code>", line N' in the traceback
+  var lineRe = /File "<code>", line (\d+)/g;
+  var m;
+  while ((m = lineRe.exec(msg)) !== null) {
+    info.line = parseInt(m[1], 10);
+  }
+
+  if (msg.indexOf("PYPAL_TIMEOUT") !== -1) {
+    info.type = "Timeout";
+    return info;
+  }
+
+  // Error type: the last line that looks like "SomeError: details"
+  var lines = msg.trim().split("\n");
+  for (var i = lines.length - 1; i >= 0; i--) {
+    var mm = lines[i].match(/^([A-Za-z_][\w.]*):\s*(.*)$/);
+    if (mm) {
+      info.type = mm[1].split(".").pop();
+      var detail = mm[2];
+      var nm = detail.match(/name '([^']+)'/);
+      if (nm) info.name = nm[1];
+      break;
+    }
+  }
+  if (info.type === "TabError") info.type = "IndentationError";
+  return info;
+}
+
+function friendlyMessage(info) {
+  var maker = FRIENDLY[info.type] || FRIENDLY.Other;
+  return maker(info);
+}
+
+/* =====================================================================
+   3. PYTHON RUNNER
+   Loads Pyodide, collects printed lines, runs kids' code with a 3s limit.
+   ===================================================================== */
+const RUNNER_PY = `import sys, time
+def _pypal_run(src, limit=3.0):
+    end = time.time() + limit
+    def guard(frame, event, arg):
+        if time.time() > end:
+            raise TimeoutError("PYPAL_TIMEOUT")
+        return guard
+    sys.settrace(guard)
+    try:
+        exec(compile(src, "<code>", "exec"), {"__name__": "__main__"})
+    finally:
+        sys.settrace(None)
+`;
+
+let pyodide = null;
+let pieceOfPyRun = null;  // reference to the Python function _pypal_run
+const printedLines = [];  // lines collected from print()
+
+async function startPython() {
+  if (typeof loadPyodide !== "function") {
+    throw new Error("pyodide.js did not load");
+  }
+  pyodide = await loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/" });
+  pyodide.setStdout({ batched: function (line) { printedLines.push(line); } });
+  pyodide.runPython(RUNNER_PY);
+  pieceOfPyRun = pyodide.globals.get("_pypal_run");
+}
+
+function wait(ms) {
+  return new Promise(function (resolve) { setTimeout(resolve, ms); });
+}
+
+async function runPython(code) {
+  printedLines.length = 0;
+  await wait(20); // give the page time to show "Running..."
+  let error = null;
+  try {
+    pieceOfPyRun(code);
+  } catch (e) {
+    error = String((e && e.message) || e);
+  }
+  // Push out any half-finished line (e.g. print(..., end=""))
+  try { pyodide.runPython("import sys\nsys.stdout.flush()"); } catch (e) { /* ignore */ }
+  return { output: printedLines.join("\n"), error: error };
+}
+
+/* =====================================================================
+   4. CHECKING
+   Decide what feedback a run gets.
+   ===================================================================== */
+
+// Remove # comments, but keep a # that is inside quotes.
+function stripComments(src) {
+  return src.split("\n").map(function (line) {
+    var quote = null;
+    for (var i = 0; i < line.length; i++) {
+      var ch = line[i];
+      if (quote) {
+        if (ch === "\\") { i++; continue; }
+        if (ch === quote) quote = null;
+      } else if (ch === '"' || ch === "'") {
+        quote = ch;
+      } else if (ch === "#") {
+        return line.slice(0, i);
+      }
+    }
+    return line;
+  }).join("\n");
+}
+
+// Is word used as a whole word? ("for" counts, "format" does not)
+function usesWord(src, word) {
+  var esc = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp("(^|[^A-Za-z0-9_])" + esc + "(?![A-Za-z0-9_])").test(src);
+}
+
+// Ignore trailing spaces on each line and blank lines at the end.
+function normalizeOutput(text) {
+  return String(text)
+    .replace(/\r/g, "")
+    .split("\n")
+    .map(function (l) { return l.replace(/[ \t]+$/, ""); })
+    .join("\n")
+    .replace(/\n+$/, "");
+}
+
+function checkRun(mission, code, result) {
+  // 1. Error?
+  if (result.error) {
+    var msg = friendlyMessage(parseError(result.error));
+    return { kind: "bad", title: msg.title, text: msg.text };
+  }
+  // 2. Missing required words?
+  var clean = stripComments(code);
+  var missing = mission.mustUse.filter(function (w) { return !usesWord(clean, w); });
+  if (missing.length > 0) {
+    return {
+      kind: "almost",
+      title: "Almost!",
+      text: "Almost! This mission wants you to use: " + missing.join(", ")
+    };
+  }
+  // 3. Wrong output?
+  if (normalizeOutput(result.output) !== normalizeOutput(mission.expected)) {
+    return {
+      kind: "almost",
+      title: "So close!",
+      text: "It ran! But it should print:",
+      expected: mission.expected
+    };
+  }
+  // 4. Success!
+  return { kind: "good", title: "Mission complete! 🎉", text: "", success: true };
+}
+
+/* =====================================================================
+   5. PAGE LOGIC
+   Dots, mission card, buttons, saving progress.
+   ===================================================================== */
+const STORAGE_KEY = "piece-of-py-progress-v1";
+
+const els = {
+  dots: document.getElementById("dots"),
+  num: document.getElementById("missionNum"),
+  title: document.getElementById("missionTitle"),
+  story: document.getElementById("missionStory"),
+  goal: document.getElementById("missionGoal"),
+  code: document.getElementById("code"),
+  run: document.getElementById("runBtn"),
+  stuck: document.getElementById("stuckBtn"),
+  next: document.getElementById("nextBtn"),
+  output: document.getElementById("output"),
+  feedback: document.getElementById("feedback"),
+  feedbackTitle: document.getElementById("feedbackTitle"),
+  feedbackText: document.getElementById("feedbackText"),
+  feedbackExpected: document.getElementById("feedbackExpected"),
+  hints: document.getElementById("hints"),
+  hintList: document.getElementById("hintList"),
+  loadError: document.getElementById("loadError")
+};
+
+const state = {
+  done: [],      // ids of finished missions
+  current: 0,    // index of the mission on screen
+  code: {},      // mission id -> the kid's code
+  hintsShown: 0, // hints shown for the current mission
+  pythonReady: false,
+  running: false
+};
+
+function loadProgress() {
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    var saved = JSON.parse(raw);
+    if (Array.isArray(saved.done)) state.done = saved.done.filter(function (id) { return typeof id === "string"; });
+    if (typeof saved.current === "number" && saved.current >= 0 && saved.current < MISSIONS.length) {
+      state.current = Math.floor(saved.current);
+    }
+    if (saved.code && typeof saved.code === "object") {
+      Object.keys(saved.code).forEach(function (id) {
+        if (typeof saved.code[id] === "string") state.code[id] = saved.code[id];
+      });
+    }
+  } catch (e) { /* storage blocked or broken: start fresh */ }
+}
+
+function saveProgress() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      done: state.done,
+      current: state.current,
+      code: state.code
+    }));
+  } catch (e) { /* storage blocked: progress just won't be saved */ }
+}
+
+let saveTimer = null;
+function saveCodeSoon() {
+  state.code[MISSIONS[state.current].id] = els.code.value;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveProgress, 400);
+}
+
+function isDone(mission) {
+  return state.done.indexOf(mission.id) !== -1;
+}
+
+function renderDots() {
+  els.dots.textContent = "";
+  MISSIONS.forEach(function (m, i) {
+    var b = document.createElement("button");
+    b.className = "dot";
+    if (isDone(m)) b.classList.add("done");
+    if (i === state.current) {
+      b.classList.add("current");
+      b.setAttribute("aria-current", "step");
+    }
+    b.textContent = String(i + 1);
+    b.title = "Mission " + (i + 1) + ": " + m.title + (isDone(m) ? " (done)" : "");
+    b.setAttribute("aria-label", b.title);
+    b.addEventListener("click", function () { showMission(i); });
+    els.dots.appendChild(b);
+  });
+}
+
+function setFeedback(kind, title, text, expected) {
+  els.feedback.className = "card" + (kind ? " " + kind : "");
+  els.feedbackTitle.textContent = title;
+  els.feedbackText.textContent = text;
+  els.feedbackText.classList.toggle("hidden", !text);
+  if (expected !== undefined) {
+    els.feedbackExpected.textContent = expected;
+    els.feedbackExpected.classList.remove("hidden");
+  } else {
+    els.feedbackExpected.textContent = "";
+    els.feedbackExpected.classList.add("hidden");
+  }
+}
+
+function setOutput(text, muted) {
+  els.output.textContent = text;
+  els.output.classList.toggle("muted", !!muted);
+}
+
+function updateNextButton() {
+  var m = MISSIONS[state.current];
+  var last = state.current === MISSIONS.length - 1;
+  els.next.classList.toggle("hidden", !isDone(m) || last);
+}
+
+function showMission(index) {
+  // keep the code of the mission we're leaving
+  state.code[MISSIONS[state.current].id] = els.code.value;
+
+  state.current = index;
+  var m = MISSIONS[index];
+  els.num.textContent = "Mission " + (index + 1) + " of " + MISSIONS.length;
+  els.title.textContent = m.title;
+  els.story.textContent = m.story;
+  els.goal.textContent = m.goal;
+  els.code.value = (typeof state.code[m.id] === "string") ? state.code[m.id] : m.starter;
+
+  state.hintsShown = 0;
+  els.hintList.textContent = "";
+  els.hints.classList.add("hidden");
+
+  if (isDone(m)) {
+    setFeedback("good", "You already finished this one ✔", "You can keep playing with the code, or go to another mission.");
+  } else {
+    setFeedback("", "Ready when you are", "Write your code, then press Run.");
+  }
+  if (state.pythonReady) setOutput("Press Run to see what your code prints.", true);
+
+  renderDots();
+  updateNextButton();
+  saveProgress();
+}
+
+function showNextHint() {
+  var m = MISSIONS[state.current];
+  if (state.hintsShown < m.hints.length) {
+    var n = state.hintsShown;
+    var div = document.createElement("div");
+    div.className = "hint";
+    var label = document.createElement("strong");
+    label.textContent = "Hint " + (n + 1) + " of " + m.hints.length + ": ";
+    var txt = document.createElement("span");
+    txt.className = "hint-text";
+    txt.textContent = m.hints[n];
+    div.appendChild(label);
+    div.appendChild(txt);
+    els.hintList.appendChild(div);
+    state.hintsShown++;
+  }
+  els.hints.classList.remove("hidden");
+  if (state.hintsShown >= m.hints.length) {
+    els.stuck.textContent = "Stuck? (no more hints)";
+  }
+  els.hints.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+async function onRun() {
+  if (!state.pythonReady || state.running) return;
+  var m = MISSIONS[state.current];
+  var code = els.code.value;
+  state.code[m.id] = code;
+
+  state.running = true;
+  els.run.disabled = true;
+  els.run.textContent = "Running...";
+  setOutput("Running...", true);
+
+  var result = await runPython(code);
+
+  if (result.output === "") {
+    setOutput(result.error ? "(nothing printed before the error)" : "(nothing printed)", true);
+  } else {
+    setOutput(result.output, false);
+  }
+
+  var verdict = checkRun(m, code, result);
+  if (verdict.success) {
+    if (!isDone(m)) state.done.push(m.id);
+    var allDone = state.done.length >= MISSIONS.length;
+    var msg = allDone
+      ? "Amazing! You finished all " + MISSIONS.length + " missions. You're a real Python coder now!"
+      : (state.current < MISSIONS.length - 1 ? "Great coding! Press Next mission when you're ready." : "Great coding! Try any missions you haven't finished yet.");
+    setFeedback("good", verdict.title, msg);
+    renderDots();
+    updateNextButton();
+  } else {
+    setFeedback(verdict.kind, verdict.title, verdict.text, verdict.expected);
+  }
+  saveProgress();
+
+  state.running = false;
+  els.run.disabled = false;
+  els.run.textContent = "Run ▶";
+}
+
+// Tab key inserts 4 spaces instead of leaving the code box
+els.code.addEventListener("keydown", function (e) {
+  if (e.key === "Tab" && !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
+    e.preventDefault();
+    var start = els.code.selectionStart;
+    var end = els.code.selectionEnd;
+    els.code.setRangeText("    ", start, end, "end");
+    saveCodeSoon();
+  }
+});
+els.code.addEventListener("input", saveCodeSoon);
+
+els.run.addEventListener("click", onRun);
+els.stuck.addEventListener("click", showNextHint);
+els.next.addEventListener("click", function () {
+  if (state.current < MISSIONS.length - 1) {
+    showMission(state.current + 1);
+    els.stuck.textContent = "Stuck?";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+});
+// Reset the Stuck? label whenever a dot is clicked
+els.dots.addEventListener("click", function () { els.stuck.textContent = "Stuck?"; });
+
+// Start up
+loadProgress();
+showMission(state.current);
+
+startPython().then(function () {
+  state.pythonReady = true;
+  els.run.disabled = false;
+  els.run.textContent = "Run ▶";
+  setOutput("Python is ready! Press Run to see what your code prints.", true);
+}).catch(function (err) {
+  console.error("Piece of Py: Python failed to load", err);
+  state.pythonReady = false;
+  els.run.disabled = true;
+  els.run.textContent = "Python didn't load";
+  els.loadError.classList.remove("hidden");
+  setOutput("Python didn't load, so code can't run right now.", true);
+});
+</script>
+</body>
+</html>
